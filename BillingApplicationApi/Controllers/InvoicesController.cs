@@ -1,6 +1,7 @@
 using BillingApplicationApi.Domain.Models;
 using BillingApplicationApi.Sqlite;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BillingApplicationApi.Controllers;
 
@@ -44,5 +45,21 @@ public class InvoicesController : ControllerBase
         await _context.SaveChangesAsync();
         
         return Ok(invoice);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetInvoices()
+    {
+        var invoices = await _context.Invoices
+            .Include(i => i.Items)
+            .ThenInclude(ii => ii.Product)
+            .ToListAsync();
+
+        if (invoices == null || invoices.Count == 0)
+        {
+            return NoContent();
+        }
+        
+        return Ok(invoices);
     }
 }
